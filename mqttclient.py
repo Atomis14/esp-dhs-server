@@ -33,5 +33,5 @@ client.loop_start()
 
 while True:
     temperature = "HELLO"
-    (rc, mid) = client.publish('encyclopedia/temperature', str(temperature), qos=1)
+    (rc, mid) = client.publish('/encyclopedia/test', str(temperature), qos=1)
     time.sleep(5)
