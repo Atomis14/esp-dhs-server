@@ -1,6 +1,7 @@
-# macOS
+# custom
 
-.DS_store
+.DS_Store
+*.crt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

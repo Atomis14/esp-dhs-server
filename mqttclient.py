@@ -26,17 +26,18 @@ def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload, "UTF-8"))
 
 client = paho.Client()
+client.tls_set("./ca.crt")
 client.username_pw_set(os.getenv("USERNAME"), os.getenv("PASSWORD"))
 client.on_connect = on_connect
 client.on_publish = on_publish
 client.on_subscribe = on_subscribe
 client.on_message = on_message
-client.connect("localhost", 1883)
-client.subscribe("/encyclopedia/#")
+client.connect("localhost", 8883)
+client.subscribe("/test")
 
 client.loop_start()
 
 while True:
     temperature = "HELLO"
-    (rc, mid) = client.publish("/encyclopedia/test", str(temperature), qos=1)
+    (rc, mid) = client.publish("/test", str(temperature), qos=1)
     time.sleep(2)
