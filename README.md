@@ -50,7 +50,7 @@ fill in the requested information, remember the fully qualified domain name (FQD
 5. use CA key to verify and sign the server certificate -> this creates the server.crt file  
 `openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 360`
 6. copy the following files to a folder under the mosquitto folder: `ca.crt`, `server.crt`, `server.key`
-7. copy `ca.crt` to the client (in this case the ESP32 and the python server)
+7. copy `ca.crt` to the server (i.e. this python application) and the client (i.e. the ESP32)
 8. edit mosquitto.conf file  
   • change `listener 1883` to `listener 8883`  
   • add `cafile <path to ca.crt)`  
