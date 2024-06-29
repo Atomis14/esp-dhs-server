@@ -32,5 +32,4 @@ def init_mqtt_client():
   client.on_subscribe = on_subscribe
   client.on_message = on_message
   client.connect(os.getenv("HOST"), 8883)
-  client.loop_start()
   return client
