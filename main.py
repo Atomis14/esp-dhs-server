@@ -12,6 +12,7 @@ def handle_config_response(client, userdata, message):
   configuration: Configuration = json.loads(message.payload)
   print(json.dumps(configuration, indent=2))
 
-(rc, mid) = client.publish("/config-request")
 
-client.loop_forever()
+rc, mid = client.publish("/config-request")
+
+client.loop_forever() # or client.loop_start() when having own infinite loop

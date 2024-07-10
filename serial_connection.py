@@ -13,8 +13,8 @@ def write_serial():
   while(True):
     port.write(b"0123456789012345678\n")
 
-
 write_serial() """
+
 
 """ import serial
 import time

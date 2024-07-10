@@ -8,7 +8,6 @@ load_dotenv()  # load environment variables
 def on_connect(client, userdata, flags, rc):
   if rc == 0:
     print("connection successful")
-    return
 
 # called when message was successfully sent to the broker
 def on_publish(client, userdata, mid):

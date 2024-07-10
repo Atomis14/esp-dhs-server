@@ -15,6 +15,7 @@ used to read data from .env file
 
 Create a .env file in the root directory with the following content:
 ```
+HOST=<FQDN of the MQTT broker device>
 USERNAME=<username for mqtt broker>
 PASSWORD=<password for mqtt broker>
 ```
@@ -49,7 +50,8 @@ fill in the requested information, remember the fully qualified domain name (FQD
 `openssl req -new -out server.csr -key server.key`
 5. use CA key to verify and sign the server certificate -> this creates the server.crt file  
 `openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 360`
-6. copy the following files to a folder under the mosquitto folder: `ca.crt`, `server.crt`, `server.key`
+6. copy the following files to a folder under the mosquitto folder: `ca.crt`, `server.crt`, `server.key`  
+(the mosquitto folder is under `/opt/homebrew/Cellar/mosquitto/2.0.18/etc/mosquitto`)
 7. copy `ca.crt` to the server (i.e. this python application) and the client (i.e. the ESP32)
 8. edit mosquitto.conf file  
   • change `listener 1883` to `listener 8883`  
