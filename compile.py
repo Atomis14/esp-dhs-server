@@ -16,23 +16,19 @@ BAUD_RATE = 115200
 
 # set up the esp idf environment in the process
 init_commands = (
-  # initialize the esp-idf environment
-  "./run_with_env.sh", ESP_IDF_EXPORT_SCRIPT_PATH,
-  # call esp idf
-  "idf.py",
-  # define directory of the project and port for flashing
-  "--project-dir", PROJECT_PATH, "--port", PORT,
-  # set the target architecture (e.g. esp32 or esp32s3)
+  "./run_with_env.sh", ESP_IDF_EXPORT_SCRIPT_PATH,  # initialize the esp-idf environment
+  "idf.py", # call esp idf
+  "--project-dir", PROJECT_PATH, "--port", PORT,  # define directory of the project and port for flashing
 )
 
 
-def run_and_print(command):
+def _run_commands(commands):
   """Run commands and print output and errors to the console."""
-  process = subprocess.run(command, capture_output=True)
+  process = subprocess.run(commands, capture_output=True)
   print(process.stdout.decode("utf-8"))
   print(process.stderr.decode("utf-8"))
 
-def delete_sdkconfig():
+def _delete_sdkconfig():
   sdkconfig_path = PROJECT_PATH + "/sdkconfig"
   if os.path.exists(sdkconfig_path):
     os.remove(PROJECT_PATH + "/sdkconfig")
@@ -40,22 +36,19 @@ def delete_sdkconfig():
     print(f"sdkconfig at path {sdkconfig_path} does not exist.")
 
 def compile_standard():
-  """Compile and flash the project without secure boot or flash encryption."""
+  """Compile and flash the project without security features."""
   os.environ["IDF_TARGET"] = TARGET
-  delete_sdkconfig()  # to get rid of activated security features
-  erase_flash() # just to be sure
+  _delete_sdkconfig()  # to get rid of activated security features
+  _erase_flash() # just to be sure
   commands = init_commands + (
-    # delete the build directory
-    "fullclean",
-    # build the binary for the specified target
-    "build",
-    # flash the binary to the specified port
-    "flash"
+    "fullclean",  # delete the build directory
+    "build",      # build the binary for the specified target
+    "flash"       # flash the binary to the specified port
   )
-  run_and_print(commands)
+  _run_commands(commands)
 
 
-def flash_bootloader():
+def _flash_bootloader():
   """Flashes only the bootloader to the esp."""
   command = (
     "--chip", TARGET,
@@ -73,7 +66,7 @@ def flash_bootloader():
   esptool.main(command)
 
 
-def generate_signing_key():
+def _generate_signing_key():
   """Generate the secure boot signing key and copy it in a pem file to the project path."""
   private_key = rsa.generate_private_key(public_exponent=65537, key_size=3072)
   private_key_pem = private_key.private_bytes(
@@ -86,7 +79,7 @@ def generate_signing_key():
     key_file.write(private_key_pem.decode())
 
 
-def erase_flash():
+def _erase_flash():
   """Erase the esp flash memory completely."""
   command = (
     "--chip", TARGET,
@@ -95,7 +88,7 @@ def erase_flash():
   esptool.main(command)
 
 
-def adjust_sdkconfig():
+def _adjust_sdkconfig():
   kconfig_path = ESP_IDF_PATH + "/Kconfig"      # base kconfig file from which all other kconfigs are loaded
   sdkconfig_path = PROJECT_PATH + "/sdkconfig"  # file holding the actual values of the kconfig variables
 
@@ -125,25 +118,22 @@ def adjust_sdkconfig():
 def compile_secure():
   """Compile and flash project with activated secure boot and flash encryption."""
   os.environ["IDF_TARGET"] = TARGET
-  generate_signing_key()
-  erase_flash()
-  adjust_sdkconfig()
+  _generate_signing_key()
+  _erase_flash()
+  _adjust_sdkconfig()
+  time.sleep(1)   # necessary so that the right files are flashed
+  commands = init_commands + (
+    "fullclean",  # delete the build directory
+    "bootloader", # compile the bootloader
+  )
+  _run_commands(commands)
+  time.sleep(1)
+  _flash_bootloader()
   time.sleep(1)
   commands = init_commands + (
-    # delete the build directory
-    "fullclean",
-    # compile the bootloader
-    "bootloader",
+    "flash", # build and flash the partition table and app image
   )
-  run_and_print(commands)
-  time.sleep(1)
-  flash_bootloader()
-  commands = init_commands + (
-    # build and flash the partition table and app image
-    "flash",
-  )
-  time.sleep(1)
-  run_and_print(commands)
+  _run_commands(commands)
 
 #compile_standard()
 #compile_secure()
