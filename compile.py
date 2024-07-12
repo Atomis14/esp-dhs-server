@@ -6,12 +6,13 @@ import os
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
-TARGET="esp32s3"
 ESP_IDF_EXPORT_SCRIPT_PATH = "/Users/michelsabbatini/esp/v5.2.1/esp-idf/export.sh"
-PROJECT_PATH="/Users/michelsabbatini/esp/v5.2.1/projects/security-test-2"
-PORT="/dev/cu.usbserial-140"
-BAUD_RATE=115200
-KEY_FILE_NAME="secure_boot_signing_key.pem"
+PROJECT_PATH = "/Users/michelsabbatini/esp/v5.2.1/projects/security-test-2"
+ESP_IDF_PATH = "/Users/michelsabbatini/esp/v5.2.1/esp-idf"
+KEY_FILE_NAME = "secure_boot_signing_key.pem"
+PORT = "/dev/cu.usbserial-140"
+TARGET = "esp32s3"
+BAUD_RATE = 115200
 
 # set up the esp idf environment in the process
 init_commands = (
@@ -22,8 +23,8 @@ init_commands = (
   # define directory of the project and port for flashing
   "--project-dir", PROJECT_PATH, "--port", PORT,
   # set the target architecture (e.g. esp32 or esp32s3)
-  "set-target", TARGET
 )
+
 
 def run_and_print(command):
   """Run commands and print output and errors to the console."""
@@ -31,18 +32,28 @@ def run_and_print(command):
   print(process.stdout.decode("utf-8"))
   print(process.stderr.decode("utf-8"))
 
+def delete_sdkconfig():
+  sdkconfig_path = PROJECT_PATH + "/sdkconfig"
+  if os.path.exists(sdkconfig_path):
+    os.remove(PROJECT_PATH + "/sdkconfig")
+  else:
+    print(f"sdkconfig at path {sdkconfig_path} does not exist.")
+
 def compile_standard():
   """Compile and flash the project without secure boot or flash encryption."""
+  os.environ["IDF_TARGET"] = TARGET
+  delete_sdkconfig()  # to get rid of activated security features
   erase_flash() # just to be sure
   commands = init_commands + (
+    # delete the build directory
+    "fullclean",
     # build the binary for the specified target
     "build",
     # flash the binary to the specified port
     "flash"
   )
-  start = time.time()
   run_and_print(commands)
-  print("elapsed time compile_and_flash: ", time.time()-start)
+
 
 def flash_bootloader():
   """Flashes only the bootloader to the esp."""
@@ -61,6 +72,7 @@ def flash_bootloader():
   )
   esptool.main(command)
 
+
 def generate_signing_key():
   """Generate the secure boot signing key and copy it in a pem file to the project path."""
   private_key = rsa.generate_private_key(public_exponent=65537, key_size=3072)
@@ -73,6 +85,7 @@ def generate_signing_key():
   with open(key_file_path, "w") as key_file:
     key_file.write(private_key_pem.decode())
 
+
 def erase_flash():
   """Erase the esp flash memory completely."""
   command = (
@@ -81,60 +94,41 @@ def erase_flash():
     "erase_flash")
   esptool.main(command)
 
+
 def adjust_sdkconfig():
-  """Adjust the configuration """
-  pass
+  kconfig_path = ESP_IDF_PATH + "/Kconfig"      # base kconfig file from which all other kconfigs are loaded
+  sdkconfig_path = PROJECT_PATH + "/sdkconfig"  # file holding the actual values of the kconfig variables
 
-def handle_sdkconfig():
-  """
-  Adjust the sdkconfig and sdkconfig.defaults files to include secure boot and flash encryption configurations.
-  Custom changes that were only made in sdkconfig and not sdkconfig.defaults are lost.
-  """
-  sdkconfig_path = PROJECT_PATH + "/sdkconfig"
-  sdkconfig_defaults_path = PROJECT_PATH + "/sdkconfig.defaults"
-  # delete sdkconfig
-  try:
-    print("Open sdkconfig file at", sdkconfig_path)
-    os.remove(sdkconfig_path)
-  except FileNotFoundError:
-    print("sdkconfig file does not exist, continue.")
-  except PermissionError as e:
-    print("Error: No permission to delete the sdkconfig file.")
-    raise e
-  except Exception as e:
-    print("Error: Unknown exception during sdkconfig deletion.", e)
-    raise e
+  if not os.path.exists(sdkconfig_path):
+    print("Create the sdkconfig file at", sdkconfig_path)
+    open(sdkconfig_path, "w")
+  
+  # necessary environment variables for loading the whole kconfig
+  os.environ["COMPONENT_KCONFIGS_PROJBUILD_SOURCE_FILE"] = PROJECT_PATH + "/build/kconfigs_projbuild.in"  # file with the paths to all Kconfig.projbuild files of project components (project-specific)
+  os.environ["COMPONENT_KCONFIGS_SOURCE_FILE"] = PROJECT_PATH + "/build/kconfigs.in"  # file with the paths of all Kconfig files of different esp idf components (not specific to the project)
+  os.environ["IDF_PATH"] = ESP_IDF_PATH
+  os.environ["IDF_TARGET"] = TARGET
+  
+  kconfig = kconfiglib.Kconfig(kconfig_path)
+  kconfig.load_config(sdkconfig_path)
+  
+  kconfig.syms["SECURE_BOOT"]                 .set_value("y")
+  kconfig.syms["SECURE_FLASH_ENC_ENABLED"]    .set_value("y")
+  kconfig.syms["PARTITION_TABLE_CUSTOM"]      .set_value("y")
+  kconfig.syms["PARTITION_TABLE_OFFSET"]      .set_value("0x10000")
+  kconfig.syms["EFUSE_VIRTUAL"]               .set_value("y")
+  kconfig.syms["EFUSE_VIRTUAL_KEEP_IN_FLASH"] .set_value("y")
+  
+  kconfig.write_config(sdkconfig_path)    
 
-  if not os.path.exists(sdkconfig_defaults_path):
-    try:
-      print("Create sdkconfig.defaults file at", sdkconfig_defaults_path)
-      open(sdkconfig_defaults_path, 'w')
-    except PermissionError as e:
-      print("Error: No permission to delete the sdkconfig file.")
-      raise e
-    except Exception as e:
-      print("Error: Unknown exception during sdkconfig.defaults creation.", e)
-      raise e
-  # write configurations to sdkconfig.defaults
-  try:
-    print("Open sdkconfig.defaults file at", sdkconfig_defaults_path)
-    kconfig = kconfiglib.Kconfig(sdkconfig_defaults_path)
-    kconfig.load_config()
-    kconfig.syms["EXMAPLE_OPTION"].set_value(1)
-    kconfig.write_config(sdkconfig_defaults_path)
-  except PermissionError as e:
-    print("Error: No permission to delete the sdkconfig file.")
-    raise e
-  except Exception as e:
-    print("Error: Unknown exception during opening of sdkconfig.defaults.")
-    raise e
-    
 
 def compile_secure():
   """Compile and flash project with activated secure boot and flash encryption."""
+  os.environ["IDF_TARGET"] = TARGET
   generate_signing_key()
   erase_flash()
-  #adjust_sdkconfig()
+  adjust_sdkconfig()
+  time.sleep(1)
   commands = init_commands + (
     # delete the build directory
     "fullclean",
@@ -153,4 +147,3 @@ def compile_secure():
 
 #compile_standard()
 #compile_secure()
-handle_sdkconfig()
