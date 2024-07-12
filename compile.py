@@ -1,6 +1,8 @@
 import subprocess
 import time
 import esptool
+import kconfiglib
+import os
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
@@ -11,7 +13,7 @@ PORT="/dev/cu.usbserial-140"
 BAUD_RATE=115200
 KEY_FILE_NAME="secure_boot_signing_key.pem"
 
-# needed for initialization of erase-flash (does not work when target is set)
+# set up the esp idf environment in the process
 init_commands = (
   # initialize the esp-idf environment
   "./run_with_env.sh", ESP_IDF_EXPORT_SCRIPT_PATH,
@@ -43,6 +45,7 @@ def compile_standard():
   print("elapsed time compile_and_flash: ", time.time()-start)
 
 def flash_bootloader():
+  """Flashes only the bootloader to the esp."""
   command = (
     "--chip", TARGET,
     f"--port={PORT}",
@@ -54,19 +57,12 @@ def flash_bootloader():
     "--flash_mode", "dio",
     "--flash_freq", "80m",
     "--flash_size", "keep", "0x0",
-    "/Users/michelsabbatini/esp/v5.2.1/projects/security-test-2/build/bootloader/bootloader.bin"
+    PROJECT_PATH + "/build/bootloader/bootloader.bin"
   )
   esptool.main(command)
 
-def erase_flash():
-  """Erase the esp flash memory completely."""
-  command = (
-    "--chip", TARGET,
-    f"--port={PORT}",
-    "erase_flash")
-  esptool.main(command)
-
 def generate_signing_key():
+  """Generate the secure boot signing key and copy it in a pem file to the project path."""
   private_key = rsa.generate_private_key(public_exponent=65537, key_size=3072)
   private_key_pem = private_key.private_bytes(
     encoding=serialization.Encoding.PEM,
@@ -77,12 +73,68 @@ def generate_signing_key():
   with open(key_file_path, "w") as key_file:
     key_file.write(private_key_pem.decode())
 
+def erase_flash():
+  """Erase the esp flash memory completely."""
+  command = (
+    "--chip", TARGET,
+    f"--port={PORT}",
+    "erase_flash")
+  esptool.main(command)
+
+def adjust_sdkconfig():
+  """Adjust the configuration """
+  pass
+
+def handle_sdkconfig():
+  """
+  Adjust the sdkconfig and sdkconfig.defaults files to include secure boot and flash encryption configurations.
+  Custom changes that were only made in sdkconfig and not sdkconfig.defaults are lost.
+  """
+  sdkconfig_path = PROJECT_PATH + "/sdkconfig"
+  sdkconfig_defaults_path = PROJECT_PATH + "/sdkconfig.defaults"
+  # delete sdkconfig
+  try:
+    print("Open sdkconfig file at", sdkconfig_path)
+    os.remove(sdkconfig_path)
+  except FileNotFoundError:
+    print("sdkconfig file does not exist, continue.")
+  except PermissionError as e:
+    print("Error: No permission to delete the sdkconfig file.")
+    raise e
+  except Exception as e:
+    print("Error: Unknown exception during sdkconfig deletion.", e)
+    raise e
+
+  if not os.path.exists(sdkconfig_defaults_path):
+    try:
+      print("Create sdkconfig.defaults file at", sdkconfig_defaults_path)
+      open(sdkconfig_defaults_path, 'w')
+    except PermissionError as e:
+      print("Error: No permission to delete the sdkconfig file.")
+      raise e
+    except Exception as e:
+      print("Error: Unknown exception during sdkconfig.defaults creation.", e)
+      raise e
+  # write configurations to sdkconfig.defaults
+  try:
+    print("Open sdkconfig.defaults file at", sdkconfig_defaults_path)
+    kconfig = kconfiglib.Kconfig(sdkconfig_defaults_path)
+    kconfig.load_config()
+    kconfig.syms["EXMAPLE_OPTION"].set_value(1)
+    kconfig.write_config(sdkconfig_defaults_path)
+  except PermissionError as e:
+    print("Error: No permission to delete the sdkconfig file.")
+    raise e
+  except Exception as e:
+    print("Error: Unknown exception during opening of sdkconfig.defaults.")
+    raise e
+    
 
 def compile_secure():
   """Compile and flash project with activated secure boot and flash encryption."""
-  # TODO: check if sdkconfig.defaults exists
   generate_signing_key()
   erase_flash()
+  #adjust_sdkconfig()
   commands = init_commands + (
     # delete the build directory
     "fullclean",
@@ -100,4 +152,5 @@ def compile_secure():
   run_and_print(commands)
 
 #compile_standard()
-compile_secure()
+#compile_secure()
+handle_sdkconfig()
