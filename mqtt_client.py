@@ -1,6 +1,6 @@
 import paho.mqtt.client as paho
 import os
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 
 load_dotenv()  # load environment variables
 

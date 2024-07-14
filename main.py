@@ -17,9 +17,9 @@ def handle_config_response(client, userdata, message):
     features.append('flashencryption')
   if configuration['secure_boot_enabled'] == False:
     features.append('secureboot')
-  print(features)
+  print('The following features will be activated:', features)
   if configuration != []:
-    compile_secure('secureboot')
+    compile_secure(features)
 
 rc, mid = client.publish('/config-request')
 

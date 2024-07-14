@@ -3,17 +3,20 @@ import time
 import esptool
 import kconfiglib
 import os
+from dotenv import load_dotenv
 from user_types.security_features_type import SecurityFeatures
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
-ESP_IDF_EXPORT_SCRIPT_PATH = '/Users/michelsabbatini/esp/v5.2.1/esp-idf/export.sh'
-PROJECT_PATH = '/Users/michelsabbatini/esp/v5.2.1/projects/security-test-2'
-ESP_IDF_PATH = '/Users/michelsabbatini/esp/v5.2.1/esp-idf'
-KEY_FILE_NAME = 'secure_boot_signing_key.pem'
-PORT = '/dev/cu.usbserial-140'
-TARGET = 'esp32s3'
-BAUD_RATE = 115200
+load_dotenv()
+
+ESP_IDF_EXPORT_SCRIPT_PATH  = os.getenv('ESP_IDF_EXPORT_SCRIPT_PATH')
+PROJECT_PATH                = os.getenv('PROJECT_PATH')
+ESP_IDF_PATH                = os.getenv('ESP_IDF_PATH')
+KEY_FILE_NAME               = os.getenv('KEY_FILE_NAME')
+PORT                        = os.getenv('PORT')
+TARGET                      = os.getenv('TARGET')
+BAUD_RATE                   = os.getenv('BAUD_RATE')
 
 # set up the esp idf environment in the process
 init_commands = (
@@ -49,6 +52,7 @@ def compile_standard():
     'flash'       # flash the binary to the specified port
   )
   _run_commands(commands)
+  print("Finished standard compiling and flashing.")
 
 
 def _flash_bootloader():
@@ -143,3 +147,4 @@ def compile_secure(features: SecurityFeatures = None):
     'flash', # build and flash the partition table and app image
   )
   _run_commands(commands)
+  print("Finished secure compiling and flashing.")
