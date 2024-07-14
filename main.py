@@ -1,6 +1,6 @@
 import json
 from mqtt_client import init_mqtt_client
-from configuration_type import Configuration
+from user_types.configuration_type import Configuration
 
 client = init_mqtt_client()
 

@@ -4,6 +4,7 @@ import esptool
 import kconfiglib
 import os
 from typing import Literal
+from user_types.security_features_type import SecurityFeatures
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
@@ -89,7 +90,7 @@ def _erase_flash():
   esptool.main(command)
 
 
-def _adjust_sdkconfig():
+def _adjust_sdkconfig(features: SecurityFeatures):
   kconfig_path = ESP_IDF_PATH + '/Kconfig'      # base kconfig file from which all other kconfigs are loaded
   sdkconfig_path = PROJECT_PATH + '/sdkconfig'  # file holding the actual values of the kconfig variables
 
@@ -115,12 +116,12 @@ def _adjust_sdkconfig():
   
   kconfig.write_config(sdkconfig_path)    
 
-def compile_secure():
+def compile_secure(features: SecurityFeatures = None):
   """Compile and flash project with activated secure boot and flash encryption."""
   os.environ['IDF_TARGET'] = TARGET
   _generate_signing_key()
   _erase_flash()
-  _adjust_sdkconfig()
+  _adjust_sdkconfig(features)
   time.sleep(1)   # necessary so that the right files are flashed
   commands = init_commands + (
     'fullclean',  # delete the build directory
