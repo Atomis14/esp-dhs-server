@@ -3,6 +3,8 @@ import time
 import esptool
 import kconfiglib
 import os
+import shutil
+import datetime
 from dotenv import load_dotenv
 from typing import Literal
 from user_types.security_features_type import SecurityFeatures
@@ -14,6 +16,7 @@ load_dotenv()
 ESP_IDF_EXPORT_SCRIPT_PATH  = os.getenv('ESP_IDF_EXPORT_SCRIPT_PATH')
 PROJECT_PATH                = os.getenv('PROJECT_PATH')
 ESP_IDF_PATH                = os.getenv('ESP_IDF_PATH')
+BACKUP_DIR_PATH             = os.getenv('BACKUP_DIR_PATH')
 KEY_FILE_NAME               = os.getenv('KEY_FILE_NAME')
 PORT                        = os.getenv('PORT')
 TARGET                      = os.getenv('TARGET')
@@ -70,19 +73,25 @@ def _flash_bootloader():
 
 def _generate_signing_key():
   """Generate the secure boot signing key and copy it in a pem file to the project path."""
+  key_file_path = PROJECT_PATH + '/' + KEY_FILE_NAME
+  # backup old key if exists
+  if os.path.exists(key_file_path):
+    current_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    backup_key_name = 'backup_' + current_datetime + '_' + KEY_FILE_NAME
+    shutil.copyfile(key_file_path, BACKUP_DIR_PATH + '/' + backup_key_name)
+  # create new key
   private_key = rsa.generate_private_key(public_exponent=65537, key_size=3072)
   private_key_pem = private_key.private_bytes(
     encoding=serialization.Encoding.PEM,
     format=serialization.PrivateFormat.TraditionalOpenSSL,
     encryption_algorithm=serialization.NoEncryption()
   )
-  key_file_path = PROJECT_PATH + '/' + KEY_FILE_NAME
   with open(key_file_path, 'w') as key_file:
     key_file.write(private_key_pem.decode())
 
 
 def _erase_flash():
-  """Erase the esp flash memory completely."""
+  """Erase the ESP flash memory completely. Erasing the flash doesn't work with idf.py due to a bug, therefore done via esptool."""
   command = (
     '--chip', TARGET,
     f'--port={PORT}',
@@ -177,3 +186,5 @@ def compile_secure(features: SecurityFeatures = None):
   )
   _run_commands(commands)
   print("Finished secure compiling and flashing.")
+
+compile_secure(['flashencryption', 'secureboot'])
