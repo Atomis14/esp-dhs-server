@@ -13,12 +13,7 @@ used to read data from .env file
 
 ### Environment Variables
 
-Create a .env file in the root directory with the following content:
-```
-HOST=<FQDN of the MQTT broker device>
-USERNAME=<username for mqtt broker>
-PASSWORD=<password for mqtt broker>
-```
+Create a .env file in the root directory, .env.example provides the structure and example values which should be adjusted.
 
 ## MQTT Broker
 

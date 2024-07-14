@@ -4,6 +4,7 @@ import esptool
 import kconfiglib
 import os
 from dotenv import load_dotenv
+from typing import Literal
 from user_types.security_features_type import SecurityFeatures
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
@@ -41,25 +42,12 @@ def _run_commands(commands):
 
 
 def _delete_sdkconfig():
+  """Delete the sdkconfig file in the project directory."""
   sdkconfig_path = PROJECT_PATH + '/sdkconfig'
   if os.path.exists(sdkconfig_path):
     os.remove(PROJECT_PATH + '/sdkconfig')
   else:
     print(f'sdkconfig at path {sdkconfig_path} does not exist.')
-
-
-def compile_standard():
-  """Compile and flash the project without security features."""
-  os.environ['IDF_TARGET'] = TARGET
-  _delete_sdkconfig()  # to get rid of activated security features
-  _erase_flash()  # just to be sure
-  commands = init_commands + (
-    'fullclean',  # delete the build directory
-    'build',      # build the binary for the specified target
-    'flash'       # flash the binary to the specified port
-  )
-  _run_commands(commands)
-  print("Finished standard compiling and flashing.")
 
 
 def _flash_bootloader():
@@ -102,7 +90,23 @@ def _erase_flash():
   esptool.main(command)
 
 
-def _adjust_sdkconfig(features: SecurityFeatures):
+def _set_debug_sdkconfig(kconfig):
+  """Adjust values in the sdkconfig file that are necessary for debugging, especially for using virtual efuses."""
+  kconfig.syms['PARTITION_TABLE_CUSTOM']      .set_value('y')       # contains efuse partition to keep values after reboot
+  kconfig.syms['PARTITION_TABLE_OFFSET']      .set_value('0x10000') # secure boot and flash encryption make bootloader bigger -> bigger offset needed
+  kconfig.syms['EFUSE_VIRTUAL']               .set_value('y')       # do not destroy efuses permanently while debugging
+  kconfig.syms['EFUSE_VIRTUAL_KEEP_IN_FLASH'] .set_value('y')       # necessary for debugging flash encryption and secure boot with virtual efuses
+
+
+def _change_security_features(mode: Literal['activate', 'deactivate'], features: SecurityFeatures = None):
+  """
+  Activate or deactivate the security features of the ESP.
+  In activation mode, the security features listed in the first parameter are activated.
+  In deactivation mode, all security features are turned off in the sdkconfig, the features parameter does not matter.
+  """
+  if mode == 'activate' and features == None:
+    raise Exception('Cannot activate features if none are listed.') # this line is reachable, even if the IDE tells it's not
+
   kconfig_path = ESP_IDF_PATH + '/Kconfig'      # base kconfig file from which all other kconfigs are loaded
   sdkconfig_path = PROJECT_PATH + '/sdkconfig'  # file holding the actual values of the kconfig variables
 
@@ -119,16 +123,34 @@ def _adjust_sdkconfig(features: SecurityFeatures):
   kconfig = kconfiglib.Kconfig(kconfig_path)
   kconfig.load_config(sdkconfig_path)
   
-  if 'secureboot' in features or features == None:
-    kconfig.syms['SECURE_BOOT']               .set_value('y')
-  if 'flashencryption' in features or features == None:
-    kconfig.syms['SECURE_FLASH_ENC_ENABLED']  .set_value('y')
-  kconfig.syms['PARTITION_TABLE_CUSTOM']      .set_value('y')       # contains efuse partition to keep values after reboot
-  kconfig.syms['PARTITION_TABLE_OFFSET']      .set_value('0x10000') # secure boot and flash encryption make bootloader bigger -> bigger offset needed
-  kconfig.syms['EFUSE_VIRTUAL']               .set_value('y')       # do not destroy efuses permanently while debugging
-  kconfig.syms['EFUSE_VIRTUAL_KEEP_IN_FLASH'] .set_value('y')       # necessary for debugging flash encryption and secure boot with virtual efuses
+  _set_debug_sdkconfig(kconfig)
+
+  if mode == 'activate':
+    if 'secureboot' in features:
+      kconfig.syms['SECURE_BOOT'].set_value('y')
+    if 'flashencryption' in features:
+      kconfig.syms['SECURE_FLASH_ENC_ENABLED'].set_value('y')
+  elif mode == 'deactivate':
+    kconfig.syms['SECURE_BOOT']             .set_value('n')
+    kconfig.syms['SECURE_FLASH_ENC_ENABLED'].set_value('n')
+  else:
+    raise TypeError('Invalid value for mode variable.')
   
   kconfig.write_config(sdkconfig_path)    
+
+
+def compile_standard():
+  """Compile and flash the project without security features."""
+  os.environ['IDF_TARGET'] = TARGET
+  _change_security_features('deactivate')
+  _erase_flash()  # just to be sure
+  commands = init_commands + (
+    'fullclean',  # delete the build directory
+    'build',      # build the binary for the specified target
+    'flash'       # flash the binary to the specified port
+  )
+  _run_commands(commands)
+  print("Finished standard compiling and flashing.")
 
 
 def compile_secure(features: SecurityFeatures = None):
@@ -140,7 +162,7 @@ def compile_secure(features: SecurityFeatures = None):
   os.environ['IDF_TARGET'] = TARGET
   _generate_signing_key()
   _erase_flash()
-  _adjust_sdkconfig(features)
+  _change_security_features('activate', features)
   time.sleep(1)   # necessary so that the right files are flashed
   commands = init_commands + (
     'fullclean',  # delete the build directory
