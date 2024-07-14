@@ -30,6 +30,7 @@ def _run_commands(commands):
   print(process.stdout.decode('utf-8'))
   print(process.stderr.decode('utf-8'))
 
+
 def _delete_sdkconfig():
   sdkconfig_path = PROJECT_PATH + '/sdkconfig'
   if os.path.exists(sdkconfig_path):
@@ -37,11 +38,12 @@ def _delete_sdkconfig():
   else:
     print(f'sdkconfig at path {sdkconfig_path} does not exist.')
 
+
 def compile_standard():
   """Compile and flash the project without security features."""
   os.environ['IDF_TARGET'] = TARGET
   _delete_sdkconfig()  # to get rid of activated security features
-  _erase_flash() # just to be sure
+  _erase_flash()  # just to be sure
   commands = init_commands + (
     'fullclean',  # delete the build directory
     'build',      # build the binary for the specified target
@@ -51,7 +53,7 @@ def compile_standard():
 
 
 def _flash_bootloader():
-  """Flashes only the bootloader to the esp."""
+  """Flashes only the bootloader to the ESP."""
   command = (
     '--chip', TARGET,
     f'--port={PORT}',
@@ -107,17 +109,24 @@ def _adjust_sdkconfig(features: SecurityFeatures):
   kconfig = kconfiglib.Kconfig(kconfig_path)
   kconfig.load_config(sdkconfig_path)
   
-  kconfig.syms['SECURE_BOOT']                 .set_value('y')
-  kconfig.syms['SECURE_FLASH_ENC_ENABLED']    .set_value('y')
-  kconfig.syms['PARTITION_TABLE_CUSTOM']      .set_value('y')
-  kconfig.syms['PARTITION_TABLE_OFFSET']      .set_value('0x10000')
-  kconfig.syms['EFUSE_VIRTUAL']               .set_value('y')
-  kconfig.syms['EFUSE_VIRTUAL_KEEP_IN_FLASH'] .set_value('y')
+  if 'secureboot' in features or features == None:
+    kconfig.syms['SECURE_BOOT']               .set_value('y')
+  if 'flashencryption' in features or features == None:
+    kconfig.syms['SECURE_FLASH_ENC_ENABLED']  .set_value('y')
+  kconfig.syms['PARTITION_TABLE_CUSTOM']      .set_value('y')       # contains efuse partition to keep values after reboot
+  kconfig.syms['PARTITION_TABLE_OFFSET']      .set_value('0x10000') # secure boot and flash encryption make bootloader bigger -> bigger offset needed
+  kconfig.syms['EFUSE_VIRTUAL']               .set_value('y')       # do not destroy efuses permanently while debugging
+  kconfig.syms['EFUSE_VIRTUAL_KEEP_IN_FLASH'] .set_value('y')       # necessary for debugging flash encryption and secure boot with virtual efuses
   
   kconfig.write_config(sdkconfig_path)    
 
+
 def compile_secure(features: SecurityFeatures = None):
-  """Compile and flash project with activated secure boot and flash encryption."""
+  """
+  Compile and flash project with activated secure boot and flash encryption.
+  Features are activated additively, e.g. if secure boot was already activated and function gets called only with the
+  flash encryption parameter, flash encryption and secure boot will both be activated in the end.
+  """
   os.environ['IDF_TARGET'] = TARGET
   _generate_signing_key()
   _erase_flash()
@@ -136,5 +145,6 @@ def compile_secure(features: SecurityFeatures = None):
   )
   _run_commands(commands)
 
+
 #compile_standard()
-#compile_secure()
+#compile_secure(['secureboot'])
