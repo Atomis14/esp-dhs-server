@@ -3,7 +3,6 @@ import time
 import esptool
 import kconfiglib
 import os
-from typing import Literal
 from user_types.security_features_type import SecurityFeatures
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
@@ -124,8 +123,8 @@ def _adjust_sdkconfig(features: SecurityFeatures):
 def compile_secure(features: SecurityFeatures = None):
   """
   Compile and flash project with activated secure boot and flash encryption.
-  Features are activated additively, e.g. if secure boot was already activated and function gets called only with the
-  flash encryption parameter, flash encryption and secure boot will both be activated in the end.
+  Features are activated additively, e.g. if secure boot was already activated and the function gets called only
+  with the flash encryption parameter, flash encryption and secure boot will both be activated in the end.
   """
   os.environ['IDF_TARGET'] = TARGET
   _generate_signing_key()
@@ -144,7 +143,3 @@ def compile_secure(features: SecurityFeatures = None):
     'flash', # build and flash the partition table and app image
   )
   _run_commands(commands)
-
-
-#compile_standard()
-#compile_secure(['secureboot'])
