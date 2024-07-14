@@ -28,9 +28,16 @@ init_commands = (
 
 def _run_commands(commands):
   """Run commands and print output and errors to the console."""
-  process = subprocess.run(commands, capture_output=True)
-  print(process.stdout.decode('utf-8'))
-  print(process.stderr.decode('utf-8'))
+  process = subprocess.Popen(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+  while True: # print output in realtime
+    output = process.stdout.readline()
+    if output == "" and process.poll() is not None:
+      break
+    if output:
+      print(output.strip())
+  for line in process.stdout: # any remaining output
+    print(line.strip())
+
 
 
 def _delete_sdkconfig():
