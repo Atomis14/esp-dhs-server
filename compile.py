@@ -43,7 +43,6 @@ def _run_commands(commands):
     print(line.strip())
 
 
-
 def _delete_sdkconfig():
   """Delete the sdkconfig file in the project directory."""
   sdkconfig_path = PROJECT_PATH + '/sdkconfig'
@@ -139,11 +138,14 @@ def _change_security_features(mode: Literal['activate', 'deactivate'], features:
       kconfig.syms['SECURE_BOOT'].set_value('y')
     if 'flashencryption' in features:
       kconfig.syms['SECURE_FLASH_ENC_ENABLED'].set_value('y')
+    if 'memoryprotection' in features:
+      kconfig.syms['ESP_SYSTEM_MEMPROT_FEATURE'].set_value('y')
   elif mode == 'deactivate':
-    kconfig.syms['SECURE_BOOT']             .set_value('n')
-    kconfig.syms['SECURE_FLASH_ENC_ENABLED'].set_value('n')
+    kconfig.syms['SECURE_BOOT']               .set_value('n')
+    kconfig.syms['SECURE_FLASH_ENC_ENABLED']  .set_value('n')
+    kconfig.syms['ESP_SYSTEM_MEMPROT_FEATURE'].set_value('n')
   else:
-    raise TypeError('Invalid value for mode variable.')
+    raise TypeError('Invalid value for the mode variable.')
   
   kconfig.write_config(sdkconfig_path)    
 
@@ -186,5 +188,3 @@ def compile_secure(features: SecurityFeatures = None):
   )
   _run_commands(commands)
   print("Finished secure compiling and flashing.")
-
-compile_secure(['flashencryption', 'secureboot'])

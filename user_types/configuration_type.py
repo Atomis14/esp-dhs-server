@@ -14,5 +14,7 @@ class Configuration(TypedDict):
   secure_boot_enabled: bool
   aggressive_key_revoke_enabled: bool
   download_mode_disabled: bool
+  memory_protection_enabled: bool
+  memory_protection_locked: bool
   security_download_enabled: bool
   anti_rollback_secure_version: int

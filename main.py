@@ -17,6 +17,8 @@ def handle_config_response(client, userdata, message):
     features.append('flashencryption')
   if configuration['secure_boot_enabled'] == False:
     features.append('secureboot')
+  if configuration['memory_protection_enabled'] == False:
+    features.append('memoryprotection')
   print('The following features will be activated:', features)
   if configuration != []:
     compile_secure(features)
