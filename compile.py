@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives import serialization
 
 load_dotenv()
 
+# constants from .env file
 ESP_IDF_EXPORT_SCRIPT_PATH  = os.getenv('ESP_IDF_EXPORT_SCRIPT_PATH')
 PROJECT_PATH                = os.getenv('PROJECT_PATH')
 ESP_IDF_PATH                = os.getenv('ESP_IDF_PATH')
