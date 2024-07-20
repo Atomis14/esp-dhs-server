@@ -1,6 +1,7 @@
 from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from datetime import datetime
+from typing import Optional
 
 
 class Base(DeclarativeBase):
@@ -12,7 +13,8 @@ class Message(Base):
   message_id:     Mapped[int]             = mapped_column(primary_key=True)
   created_at:     Mapped[datetime]        = mapped_column(server_default=func.now())
   topic:          Mapped[str]
-  status:         Mapped[int]
+  status:         Mapped[Optional[int]]
+  type:           Mapped[str]
   configuration:  Mapped["Configuration"] = relationship(back_populates="message")
 
   def __repr__(self) -> str:

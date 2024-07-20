@@ -21,14 +21,14 @@ def _on_publish(client, userdata, mid):
 def _on_subscribe(client, userdata, mid, granted_qos):
   print('subscribed: ' + str(mid) + ' ' + str(granted_qos))
 
-# called for each message received
+# called for each message received (but only if no custom callback for the topic exists)
 def _on_message(client, userdata, msg):
-  print(msg.topic + ' ' + str(msg.qos) + ' ' + str(msg.payload, 'UTF-8'))
+  print('received: ' + msg.topic + ' ' + str(msg.qos) + ' ' + str(msg.payload, 'UTF-8'))
 
 
 def publish_message(client, topic, payload=None):
   return_code, message_id = client.publish(topic, payload)
-  database.add_row(Message(topic='/config-request', status=return_code))
+  database.add_row(Message(topic='/config-request', status=return_code, type='sent'))
 
 
 def init_mqtt_client():

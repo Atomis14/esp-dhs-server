@@ -15,6 +15,7 @@ def handle_config_response(client, userdata, message):
   print('Config Response Message Received')
   configuration: Configuration = json.loads(message.payload)
   print(json.dumps(configuration, indent=2))
+  database.add_row(Message(topic=message.topic, type='received'))
   features: SecurityFeatures = [] # security features that should be activated
   if configuration['flash_encryption_enabled'] == False:
     features.append('flashencryption')
@@ -22,15 +23,16 @@ def handle_config_response(client, userdata, message):
     features.append('secureboot')
   if configuration['memory_protection_enabled'] == False:
     features.append('memoryprotection')
-  if configuration: # configuration array not empty
+  if features: # features array not empty
     print('The following features will be activated:', features)
     compile_secure(features)
 
 @client.topic_callback('/device-connected')
 def handle_device_start(client, userdata, message):
-  print('Device Connected Message Received')
+  print('"Back Online" Message Received')
   configuration: Configuration = json.loads(message.payload)
   print(json.dumps(configuration, indent=2))
+  database.add_row(Message(topic=message.topic, type='received'))
 
 
 publish_message(client, '/config-request')
