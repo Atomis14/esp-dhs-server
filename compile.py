@@ -189,5 +189,5 @@ def compile_secure(features: SecurityFeatures = None):
   _run_commands(commands)
   print("Finished secure compiling and flashing.")
 
-#compile_secure(['flashencryption', 'memoryprotection', 'secureboot'])
+compile_secure(['flashencryption', 'memoryprotection', 'secureboot'])
 #compile_standard()
