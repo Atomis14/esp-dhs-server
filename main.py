@@ -1,9 +1,12 @@
 import json
 import time
-from mqtt_client import init_mqtt_client
+from mqtt_client import init_mqtt_client, publish_message
 from user_types.configuration_type import Configuration
 from user_types.security_features_type import SecurityFeatures
 from compile import compile_secure
+import database
+from models import Message
+
 
 client = init_mqtt_client()
 
@@ -29,6 +32,8 @@ def handle_device_start(client, userdata, message):
   configuration: Configuration = json.loads(message.payload)
   print(json.dumps(configuration, indent=2))
 
-rc, mid = client.publish('/config-request')
+
+publish_message(client, '/config-request')
+
 
 client.loop_forever() # or client.loop_start() when having own infinite loop
