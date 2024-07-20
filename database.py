@@ -10,7 +10,12 @@ engine = create_engine('sqlite://' + os.getenv('DB_PATH'))  # add echo=True para
 Base.metadata.create_all(engine)  # create the tables
     
 
-def add_row(object):
+def add_row(rows):
   with Session(engine) as session:
-    session.add(object)
+    if type(rows) in [list, tuple]: # multiple rows
+      session.add_all(rows)
+    elif isinstance(rows, object):  # single row
+      session.add(rows)
+    else:
+      raise Exception('Parameter type not valid.')
     session.commit()

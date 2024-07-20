@@ -18,7 +18,7 @@ class Message(Base):
   configuration:  Mapped["Configuration"] = relationship(back_populates="message")
 
   def __repr__(self) -> str:
-    return f"• Message(id: {self.message_id}, created_at: {self.created_at}, type: {self.type})"
+    return f"•Message(id: {self.message_id}, created_at: {self.created_at}, type: {self.type})"
   
 
 class Configuration(Base):
@@ -29,4 +29,4 @@ class Configuration(Base):
   configuration:    Mapped[str]
 
   def __repr__(self) -> str:
-    return f"• Configuration(id: {self.configuration_id}, message: {self.message}, configuration: {self.configuration})"
+    return f"•Configuration(id: {self.configuration_id}, message: {self.message}, configuration: {self.configuration})"
