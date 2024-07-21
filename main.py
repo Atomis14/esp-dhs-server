@@ -1,11 +1,12 @@
 import json
 import time
+from datetime import datetime, timezone
 import database
 from mqtt_client import init_mqtt_client, publish_message
 from user_types.configuration_type import Configuration
 from user_types.security_features_type import SecurityFeatures
 from compile import compile_secure
-from models import Message, Configuration
+from models import Message, Configuration, Flash
 
 run_main_loop = True
 client = init_mqtt_client()
@@ -29,7 +30,11 @@ def handle_config_response(client, userdata, message):
   if features: # features array not empty
     print('The following features will be activated:', features)
     run_main_loop = False
+    flash_db = Flash(features=str(features))
+    database.add_row(flash_db)  # already add here to DB in case compile_secure fails
     compile_secure(features)
+    flash_db.end = datetime.now(timezone.utc).replace(microsecond=0)
+    database.add_row(flash_db)
     run_main_loop = True
 
 @client.topic_callback('/device-connected')

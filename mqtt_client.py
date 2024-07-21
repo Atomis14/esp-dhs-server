@@ -15,15 +15,15 @@ def _on_connect(client, userdata, flags, rc):
 
 # called when message was successfully sent to the broker
 def _on_publish(client, userdata, mid):
-  print('message sent, id: ' + str(mid))
+  print('message sent, id:', str(mid))
 
 # called when broker responded to subscription request
 def _on_subscribe(client, userdata, mid, granted_qos):
-  print('subscribed: ' + str(mid) + ' ' + str(granted_qos))
+  print('subscribed:', str(mid), str(granted_qos))
 
 # called for each message received (but only if no custom callback for the topic exists)
 def _on_message(client, userdata, msg):
-  print('received: ' + msg.topic + ' ' + str(msg.qos) + ' ' + str(msg.payload, 'UTF-8'))
+  print('received:', msg.topic, str(msg.qos), str(msg.payload, 'UTF-8'))
 
 
 def publish_message(client, topic, payload=None):
