@@ -28,7 +28,7 @@ def _on_message(client, userdata, msg):
 
 def publish_message(client, topic, payload=None):
   return_code, message_id = client.publish(topic, payload)
-  database.add_row(Message(topic='/config-request', status=return_code, type='sent'))
+  database.add_row(Message(topic=topic, status=return_code, type='sent'))
 
 
 def init_mqtt_client():

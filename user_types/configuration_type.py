@@ -18,3 +18,4 @@ class Configuration(TypedDict):
   memory_protection_locked: bool
   security_download_enabled: bool
   anti_rollback_secure_version: int
+  atecc_connected: bool
