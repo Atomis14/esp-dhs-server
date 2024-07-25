@@ -7,7 +7,6 @@ import shutil
 import datetime
 from dotenv import load_dotenv
 from typing import Literal
-from user_types.security_features_type import SecurityFeatures
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
@@ -107,7 +106,7 @@ def _set_debug_sdkconfig(kconfig):
   kconfig.syms['EFUSE_VIRTUAL_KEEP_IN_FLASH'] .set_value('y')       # necessary for debugging flash encryption and secure boot with virtual efuses
 
 
-def _change_security_features(mode: Literal['activate', 'deactivate'], features: SecurityFeatures = None):
+def _change_security_features(mode: Literal['activate', 'deactivate'], features = None):
   """
   Activate or deactivate the security features of the ESP.
   In activation mode, the security features listed in the first parameter are activated.
@@ -177,7 +176,7 @@ def compile_standard():
   print("Finished standard compiling and flashing.")
 
 
-def compile_secure(features: SecurityFeatures = None):
+def compile_secure(features = None):
   """
   Compile and flash project with activated secure boot and flash encryption.
   Features are activated additively, e.g. if secure boot was already activated and the function gets called only

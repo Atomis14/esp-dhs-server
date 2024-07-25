@@ -23,10 +23,29 @@ class Message(Base):  # MQTT messages
 
 class Configuration(Base):  # configurations that were returned from the ESP32
   __tablename__ = 'configurations'
-  configuration_id: Mapped[int]       = mapped_column(primary_key=True)
-  message_id:       Mapped[int]       = mapped_column(ForeignKey("messages.message_id"), unique=True)
-  message:          Mapped["Message"] = relationship(back_populates="configuration", single_parent=True)
-  configuration:    Mapped[str]
+  configuration_id:               Mapped[int]       = mapped_column(primary_key=True)
+  message_id:                     Mapped[int]       = mapped_column(ForeignKey("messages.message_id"), unique=True)
+  message:                        Mapped["Message"] = relationship(back_populates="configuration", single_parent=True)
+  # configurations as in configuration_type.py
+  base_mac_address:               Mapped[str]
+  efuse_default_mac:              Mapped[str]
+  efuse_custom_mac:               Mapped[str]
+  esp_idf_version:                Mapped[str]
+  chip_cores:                     Mapped[int]
+  chip_features:                  Mapped[int]
+  chip_model:                     Mapped[int]
+  chip_revision:                  Mapped[int]
+  flash_encryption_enabled:       Mapped[bool]
+  flash_encryption_mode:          Mapped[int]
+  secure_boot_enabled:            Mapped[bool]
+  aggressive_key_revoke_enabled:  Mapped[bool]
+  download_mode_disabled:         Mapped[bool]
+  memory_protection_enabled:      Mapped[bool]
+  memory_protection_locked:       Mapped[bool]
+  security_download_enabled:      Mapped[bool]
+  anti_rollback_secure_version:   Mapped[int]
+  atecc_connected:                Mapped[bool]
+
 
   def __repr__(self) -> str:
     return f"•Configuration(id: {self.configuration_id}, message: {self.message}, configuration: {self.configuration})"
@@ -34,12 +53,14 @@ class Configuration(Base):  # configurations that were returned from the ESP32
 
 class Flash(Base):  # flash beginnings and ends
   __tablename__ = 'flashes'
-  flash_id:   Mapped[int]                 = mapped_column(primary_key=True)
-  start:      Mapped[datetime]            = mapped_column(server_default=func.now())  # datetime when flash was started
-  end:        Mapped[Optional[datetime]]  = mapped_column(server_onupdate=func.now()) # datetime when flash was finished
-  status:     Mapped[str]   # 'pending', 'error', 'success'
-  ##### security features as in security_features_type.py
-  features:   Mapped[str]                 # security features that were activated
+  flash_id:         Mapped[int]                 = mapped_column(primary_key=True)
+  start:            Mapped[datetime]            = mapped_column(server_default=func.now())  # datetime when flash was started
+  end:              Mapped[Optional[datetime]]  = mapped_column(server_onupdate=func.now()) # datetime when flash was finished
+  status:           Mapped[str]   # 'pending', 'error', 'success'
+  # security features as in security_features_type.py (if true, the feature should have been activated in this flash)
+  flashencryption:  Mapped[bool]                = mapped_column(default=False)
+  secureboot:       Mapped[bool]                = mapped_column(default=False)
+  memoryprotection: Mapped[bool]                = mapped_column(default=False)
 
   def __repr__(self) -> str:
-    return f"•Flash(id: {self.flash_id}, created_at: {self.created_at}, features: {self.features})"
+    return f"•Flash(id: {self.flash_id}, start: {self.start}, end: {self.end}, status: {self.status})"

@@ -11,6 +11,10 @@ Base.metadata.create_all(engine)  # create the tables
     
 
 def add_row(rows):
+  """
+  Commits the provided object or list of objects to the database.
+  The parameter can either be one single object or a list/tuple of objects to commit.
+  """
   with Session(engine) as session:
     if type(rows) in [list, tuple]: # multiple rows
       session.add_all(rows)
