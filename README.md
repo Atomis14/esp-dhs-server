@@ -1,4 +1,6 @@
-# BA-project Server
+# ESP-DHS Server
+
+ESP32-S3 **D**evice **H**ardening **S**ystem
 
 ## Python Application
 

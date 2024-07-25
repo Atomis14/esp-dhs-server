@@ -37,6 +37,7 @@ class Flash(Base):  # flash beginnings and ends
   flash_id:   Mapped[int]                 = mapped_column(primary_key=True)
   start:      Mapped[datetime]            = mapped_column(server_default=func.now())  # datetime when flash was started
   end:        Mapped[Optional[datetime]]  = mapped_column(server_onupdate=func.now()) # datetime when flash was finished
+  status:     Mapped[str]   # 'pending', 'error', 'success'
   ##### security features as in security_features_type.py
   features:   Mapped[str]                 # security features that were activated
 

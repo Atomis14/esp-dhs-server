@@ -151,7 +151,7 @@ def _change_security_features(mode: Literal['activate', 'deactivate'], features:
   kconfig.write_config(sdkconfig_path)    
 
 
-def _run_application():
+def _restart_application():
   """
   Run the application that resides in ESP32 flash.
   This is needed to restart the ESP32 after secure boot and flash encryption are activated, since it is not done automatically after flashing.
@@ -200,7 +200,7 @@ def compile_secure(features: SecurityFeatures = None):
     'flash', # build and flash the partition table and app image
   )
   _run_commands(commands)
-  _run_application()  # manually restart the ESP32
+  _restart_application()  # manually restart the ESP32
   print("Finished secure compiling and flashing.")
 
 #compile_secure(['flashencryption', 'memoryprotection', 'secureboot'])
