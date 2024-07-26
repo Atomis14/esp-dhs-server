@@ -8,12 +8,28 @@ from models import Message, Configuration, Flash
 
 run_main_loop = True
 client = init_mqtt_client()
+current_config = {} # stores the last known configuration of the ESP32-S3
+
+def compare_configurations(new_config):
+  global current_config
+  if current_config != {}:
+    change_detected = False
+    output = ""
+    for key in current_config:
+      if current_config[key] != new_config[key]:
+        change_detected = True
+        output += key + ': ' + str(current_config[key]) + ' → ' + str(new_config[key]) + '\n'
+    if change_detected:
+      print('\nChange in config detected:\nproperty: old value → new value')
+      print(output)
+  current_config = new_config
 
 @client.topic_callback('/config-response')
 def handle_config_response(client, userdata, message):
   global run_main_loop
   print('/config-response message received')
   configuration = json.loads(message.payload)
+  compare_configurations(configuration)
   #print(json.dumps(configuration, indent=2))
   message_db = Message(topic=message.topic, type='received')
   configuration_db = Configuration(message=message_db, **configuration)
@@ -47,6 +63,7 @@ def handle_config_response(client, userdata, message):
 def handle_device_start(client, userdata, message):
   print('/device-connected message received')
   configuration = json.loads(message.payload)
+  compare_configurations(configuration)
   #print(json.dumps(configuration, indent=2))
   message_db = Message(topic=message.topic, type='received')
   configuration_db = Configuration(message=message_db, **configuration)
