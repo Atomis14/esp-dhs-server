@@ -1,10 +1,14 @@
+import os
 import json
 import time
 import database
+from dotenv import load_dotenv
 from datetime import datetime, timezone
 from mqtt_client import init_mqtt_client, publish_message
 from compile import compile_secure
 from models import Message, Configuration, Flash
+
+load_dotenv()
 
 run_main_loop = True
 client = init_mqtt_client()
@@ -20,7 +24,7 @@ def compare_configurations(new_config):
         change_detected = True
         output += key + ': ' + str(current_config[key]) + ' → ' + str(new_config[key]) + '\n'
     if change_detected:
-      print('\nChange in config detected:\nproperty: old value → new value')
+      print('\nChange in config detected:')
       print(output)
   current_config = new_config
 
@@ -73,7 +77,7 @@ client.loop_start()
 while True:
   if run_main_loop:
     publish_message(client, '/config-request')
-    time.sleep(10)
+    time.sleep(int(os.getenv('REQUEST_INTERVAL')))  # should be at least 60 if ATECC is not connected, else maybe no response
 
 """ publish_message(client, '/config')
 client.loop_forever() # or client.loop_start() when having own infinite loop """
