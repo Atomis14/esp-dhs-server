@@ -13,7 +13,6 @@ from cryptography.hazmat.primitives import serialization
 load_dotenv()
 
 # constants from .env file
-ESP_IDF_EXPORT_SCRIPT_PATH  = os.getenv('ESP_IDF_EXPORT_SCRIPT_PATH')
 PROJECT_PATH                = os.getenv('PROJECT_PATH')
 ESP_IDF_PATH                = os.getenv('ESP_IDF_PATH')
 BACKUP_DIR_PATH             = os.getenv('BACKUP_DIR_PATH')
@@ -24,7 +23,7 @@ BAUD_RATE                   = os.getenv('BAUD_RATE')
 
 # set up the esp idf environment in the process
 init_commands = (
-  './run_with_env.sh', ESP_IDF_EXPORT_SCRIPT_PATH,  # initialize the esp-idf environment
+  './run_with_env.sh', ESP_IDF_PATH + '/export.sh',  # initialize the esp-idf environment
   'idf.py', # call esp idf
   '--project-dir', PROJECT_PATH, '--port', PORT,  # define directory of the project and port for flashing
 )
@@ -203,4 +202,4 @@ def compile_secure(features = None):
   print("Finished secure compiling and flashing.")
 
 #compile_secure(['flashencryption', 'memoryprotection', 'secureboot'])
-#compile_standard()
+compile_standard()
