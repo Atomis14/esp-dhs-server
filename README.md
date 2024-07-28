@@ -1,27 +1,31 @@
 # ESP-DHS Server
 
-ESP32-S3 **D**evice **H**ardening **S**ystem
+**ESP**32-S3 **D**evice **H**ardening **S**ystem
 
-## Python Application
+This README includes instructions for the python server contained in this repository but also the MQTT broker.
 
-- install esptool: `pip install esptool`  
-used to flash firmware to the ESP over USB
-- (import pyserial: `pip install pyserial`)  
-used for serial communication over USB
-- install paho `pip install paho-mqtt`  
-used for MQTT connection over TCP
-- install dotenv `pip install python-dotenv`  
-used to read data from .env file
+## Python Server
 
-### Environment Variables
+Python version: 3.9.6
 
-Create a .env file in the root directory, .env.example provides the structure and example values which should be adjusted.
+### Setup
+
+1. Install the necessary packages:
+- `esptool` (flash firmware to the ESP over USB)
+- `paho` (MQTT connection over TCP)
+- `dotenv` (read data from .env file)
+- `kconfiglib` (programmatically edit sdkconfig files)
+- `SQLAlchemy` (communication with SQLite database)
+
+2. Create the `.env` file in the root directory (copy the .env.example file and adjust the values)
+
+3. Copy the SSL certificate for the connection with the MQTT broker to the root directory (make sure it is called `ca.crt`)
 
 ## MQTT Broker
 
-Procedure used on macOS 14.5 (Sonoma)
+Procedure on macOS 14.5 (Sonoma) with Homebrew, may vary for different operating systems
 
-### Installation
+### Setup
 
 - install mosquitto: `brew install mosquitto`
 - configure the broker
@@ -58,9 +62,3 @@ fill in the requested information, remember the fully qualified domain name (FQD
 9. client configuration (for python server)  
   • add the following line `client.tls_set(<path to ca.crt>)`
   • change the listening port to 8883
-
-
-
-### Debugging
-
-For debugging (without TLS), the broker with URL `mqtt://broker.mqttdashboard.com` can be used.
