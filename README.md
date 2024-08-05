@@ -11,11 +11,11 @@ Python version: 3.9.6
 ### Setup
 
 1. Install the necessary packages:
-- `esptool` (flash firmware to the ESP over USB)
-- `paho` (MQTT connection over TCP)
-- `dotenv` (read data from .env file)
-- `kconfiglib` (programmatically edit sdkconfig files)
-- `SQLAlchemy` (communication with SQLite database)
+  - `esptool` (flash firmware to the ESP over USB)
+  - `paho` (MQTT connection over TCP)
+  - `dotenv` (read data from .env file)
+  - `kconfiglib` (programmatically edit sdkconfig files)
+  - `SQLAlchemy` (communication with SQLite database)
 
 2. Create the `.env` file in the root directory (copy the .env.example file and adjust the values)
 
@@ -55,10 +55,10 @@ fill in the requested information, remember the fully qualified domain name (FQD
 (the mosquitto folder is under `/opt/homebrew/Cellar/mosquitto/2.0.18/etc/mosquitto`)
 7. copy `ca.crt` to the server (i.e. this python application) and the client (i.e. the ESP32)
 8. edit mosquitto.conf file  
-  • change `listener 1883` to `listener 8883`  
-  • add `cafile <path to ca.crt)`  
-  • add `keyfile <path to server.key>`  
-  • add `certfile <path to server.crt>`
+  - change `listener 1883` to `listener 8883`  
+  - add `cafile <path to ca.crt)`  
+  - add `keyfile <path to server.key>`  
+  - add `certfile <path to server.crt>`
 9. client configuration (for python server)  
-  • add the following line `client.tls_set(<path to ca.crt>)`
-  • change the listening port to 8883
+  - add the following line `client.tls_set(<path to ca.crt>)`  
+  - change the listening port to 8883
