@@ -15,18 +15,18 @@ class Message(Base):  # MQTT messages
   topic:          Mapped[str]             # MQTT topic
   status:         Mapped[Optional[int]]   # return code, only when sent
   type:           Mapped[str]             # sent or received
-  configuration:  Mapped["Configuration"] = relationship(back_populates="message")  # received configuration, if any
+  configuration:  Mapped['Configuration'] = relationship(back_populates='message')  # received configuration, if any
 
   def __repr__(self) -> str:
-    return f"•Message(id: {self.message_id}, created_at: {self.created_at}, topic: {self.topic}, status: {self.status}, type: {self.type})"
+    return f'•Message(id: {self.message_id}, created_at: {self.created_at}, topic: {self.topic}, status: {self.status}, type: {self.type})'
   
 
 class Configuration(Base):  # configurations that were returned from the ESP32
   __tablename__ = 'configurations'
   configuration_id:               Mapped[int]       = mapped_column(primary_key=True)
-  message_id:                     Mapped[int]       = mapped_column(ForeignKey("messages.message_id"), unique=True)
-  message:                        Mapped["Message"] = relationship(back_populates="configuration", single_parent=True)
-  # configurations as in configuration_type.py
+  message_id:                     Mapped[int]       = mapped_column(ForeignKey('messages.message_id'), unique=True)
+  message:                        Mapped['Message'] = relationship(back_populates='configuration', single_parent=True)
+  # ESP32-S3 security configuration fields
   base_mac_address:               Mapped[str]
   efuse_default_mac:              Mapped[str]
   efuse_custom_mac:               Mapped[str]
@@ -48,7 +48,7 @@ class Configuration(Base):  # configurations that were returned from the ESP32
 
 
   def __repr__(self) -> str:
-    return f"•Configuration(id: {self.configuration_id}, message: {self.message}, configuration: {self.configuration})"
+    return f'•Configuration(id: {self.configuration_id}, message: {self.message}, configuration: {self.configuration})'
   
 
 class Flash(Base):  # flash beginnings and ends
@@ -63,4 +63,4 @@ class Flash(Base):  # flash beginnings and ends
   memoryprotection: Mapped[bool]                = mapped_column(default=False)
 
   def __repr__(self) -> str:
-    return f"•Flash(id: {self.flash_id}, start: {self.start}, end: {self.end}, status: {self.status})"
+    return f'•Flash(id: {self.flash_id}, start: {self.start}, end: {self.end}, status: {self.status})'

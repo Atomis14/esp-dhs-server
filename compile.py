@@ -182,7 +182,8 @@ def compile_secure(features = None):
   with the flash encryption parameter, flash encryption and secure boot will both be activated in the end.
   """
   os.environ['IDF_TARGET'] = TARGET
-  _generate_signing_key()
+  if 'secureboot' in features:
+    _generate_signing_key()
   _erase_flash()
   _change_security_features('activate', features)
   time.sleep(1)   # necessary so that the right files are flashed
@@ -199,7 +200,7 @@ def compile_secure(features = None):
   )
   _run_commands(commands)
   _restart_application()  # manually restart the ESP32
-  print("Finished secure compiling and flashing.")
+  print('Finished secure compiling and flashing.')
 
 #compile_secure(['flashencryption', 'memoryprotection', 'secureboot'])
-compile_standard()
+#compile_standard()

@@ -57,7 +57,7 @@ def handle_config_response(client, userdata, message):
       compile_secure(features)
       flash_db.status = 'success'
     except Exception as e:
-      print("Could not flash firmware:", e, "\nYou may need to restart the device manually.")
+      print('Could not flash firmware:', e, '\nYou may need to restart the device manually.')
       flash_db.status = 'error'
     flash_db.end = datetime.now(timezone.utc).replace(microsecond=0)
     database.add_row(flash_db)
@@ -77,7 +77,8 @@ client.loop_start()
 while True:
   if run_main_loop:
     publish_message(client, '/config-request')
-    time.sleep(int(os.getenv('REQUEST_INTERVAL')))  # should be at least 60 if ATECC is not connected, else maybe no response
+    time.sleep(int(os.getenv('REQUEST_INTERVAL')))
+
 
 """ publish_message(client, '/config')
 client.loop_forever() # or client.loop_start() when having own infinite loop """
