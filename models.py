@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
 class Message(Base):  # MQTT messages
   __tablename__ = 'messages'
   message_id:     Mapped[int]             = mapped_column(primary_key=True)
-  created_at:     Mapped[datetime]        = mapped_column(server_default=func.now())
+  created_at:     Mapped[datetime]
   topic:          Mapped[str]             # MQTT topic
   status:         Mapped[Optional[int]]   # return code, only when sent
   type:           Mapped[str]             # sent or received
@@ -54,8 +54,8 @@ class Configuration(Base):  # configurations that were returned from the ESP32
 class Flash(Base):  # flash beginnings and ends
   __tablename__ = 'flashes'
   flash_id:         Mapped[int]                 = mapped_column(primary_key=True)
-  start:            Mapped[datetime]            = mapped_column(server_default=func.now())  # datetime when flash was started
-  end:              Mapped[Optional[datetime]]  = mapped_column(server_onupdate=func.now()) # datetime when flash was finished
+  start:            Mapped[datetime]            # datetime when flash was started
+  end:              Mapped[Optional[datetime]]  # datetime when flash was finished
   status:           Mapped[str]   # 'pending', 'error', 'success'
   # security features as in security_features_type.py (if true, the feature should have been activated in this flash)
   flashencryption:  Mapped[bool]                = mapped_column(default=False)

@@ -3,6 +3,7 @@ import os
 import database
 from models import Message
 from dotenv import load_dotenv
+from datetime import datetime, timezone
 
 load_dotenv()  # load environment variables
 
@@ -28,7 +29,7 @@ def _on_message(client, userdata, msg):
 
 def publish_message(client, topic, payload=None):
   return_code, message_id = client.publish(topic, payload)
-  database.add_row(Message(topic=topic, status=return_code, type='sent'))
+  database.add_row(Message(topic=topic, status=return_code, type='sent', created_at=datetime.now(timezone.utc)))
 
 
 def init_mqtt_client():
